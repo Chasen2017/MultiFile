@@ -17,6 +17,11 @@ public class FileEntity implements Parcelable {
 
     FileEntity parent;//父目录
     ArrayList<FileEntity> childList;//子目录
+    int address;//表示文件的物理地址
+    int MaxLength=100;//文件的最大容量，默认为100,可以自己设置
+
+
+
     boolean hasChildren;//是否有子目录，默认为false
     boolean hasParent;//是否有父目录，默认为false
 
@@ -25,7 +30,6 @@ public class FileEntity implements Parcelable {
 
     String content;//当做数据文件里面的数据
 
-    int MaxLength=100;//文件的最大容量，默认为100
 
     public FileEntity(String name, boolean isDirectory) {
         this.name = name;
@@ -41,6 +45,14 @@ public class FileEntity implements Parcelable {
         hasParent = false;
         canRead = true;
         canWrite = false;
+    }
+
+    public int getAddress() {
+        return address;
+    }
+
+    public void setAddress(int address) {
+        this.address = address;
     }
 
     public int getMaxLength() {

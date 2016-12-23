@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputFilter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by 东 on 2016/12/11.
@@ -38,6 +40,8 @@ public class FileFragment extends Fragment implements View.OnClickListener {
     private String mCurrentDirectory;
 
     private FileAdapter mAdapter;
+
+    private static final String TAG = "FileFragment";
 
     @Nullable
     @Override
@@ -195,6 +199,20 @@ public class FileFragment extends Fragment implements View.OnClickListener {
                         } else {
                             fileEntity.setMaxLength(Integer.parseInt(maxLength));
                         }
+                        /**
+                         * 还要对文件管理进行磁盘盘块的划分
+                         */
+                    int address=BitMapManager.createNewData(Integer.parseInt(maxLength));
+                        Log.d(TAG, "文件，盘块的分配 ");
+                        if (address==-1){
+                            Toast.makeText(getActivity(), "文件内存分配失败", Toast.LENGTH_SHORT).show();
+                            return;
+                        }else {
+                            fileEntity.setAddress(address);
+                            for (int i = 0; i < Integer.parseInt(maxLength); i++) {
+                                Log.d(TAG, "盘块" + (address + i));
+                            }
+                        }
 
                         mFileList.add(fileEntity);
                         mAdapter.notifyDataSetChanged();
@@ -244,16 +262,37 @@ public class FileFragment extends Fragment implements View.OnClickListener {
     //删除文件
     private void deleteDirectoryOrData(FileEntity fileEntity, int position) {
         /**
-         * 这里不考虑文件夹是否为空的情况:如果是目录文件,要判断子目录是否为空,若子目录为空，直接删除，不为空的话
-         *
-         * 直接进行删除
+         * 判断删除的是目录文件还是数据文件
          */
+        if (fileEntity.isDirectory()){
+            deleteDirectory(fileEntity);
+        }else {
+            deleteData(fileEntity);
+        }
 
         mFileList.remove(position);
         mAdapter.notifyDataSetChanged();
         Toast.makeText(getActivity(), "删除文件成功", Toast.LENGTH_SHORT).show();
 
     }
+
+    //删除文件夹,遍历子文件夹
+    private void deleteDirectory(FileEntity fileEntity){
+        List<FileEntity> fileList=fileEntity.getChildList();
+        for (int i = 0; i <fileList.size() ; i++) {
+            if (fileList.get(i).isDirectory()){
+                deleteDirectory(fileList.get(i));
+            }else {
+                deleteData(fileList.get(i));
+            }
+        }
+
+    }
+    //删除数据文件
+    private void deleteData(FileEntity fileEntity){
+        BitMapManager.delete(fileEntity.getAddress(),fileEntity.getMaxLength());
+    }
+
 
     //修改目录文件或者数据文件的名字
     private void changeName(final FileEntity fileEntity, String title) {
@@ -300,7 +339,8 @@ public class FileFragment extends Fragment implements View.OnClickListener {
         //设置可编辑的最大长度，模拟文件的最大长度
         editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(fileEntity.getMaxLength())});
 
-        editText.setText(fileEntity.getContent());
+        editText.setText(BitMapManager.read(fileEntity.getAddress(),fileEntity.getMaxLength()));
+
         btCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -311,7 +351,14 @@ public class FileFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onClick(View view) {
                 String newContent = editText.getText().toString();
-                fileEntity.setContent(newContent);
+                int contentLength=newContent.length();
+                if (contentLength>fileEntity.getMaxLength()){
+                    Toast.makeText(getActivity(),"操作失败，超出文件的最大容量",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                BitMapManager.write(fileEntity.getAddress(),fileEntity.getMaxLength(),newContent);
+                Toast.makeText(getActivity(),"写入文件成功",Toast.LENGTH_SHORT).show();
                 mAdapter.notifyDataSetChanged();
                 dialog.dismiss();
             }
@@ -336,7 +383,7 @@ public class FileFragment extends Fragment implements View.OnClickListener {
         //注意, 这里不是setOnKeyListener, 而是setKeyListener. 此方法是TextView的成员, 调用后的效果完全符合预期, 并且获得焦点后不会弹出输入法.
 //                editText.setFocusable(false);
         editText.setKeyListener(null);
-        editText.setText(fileEntity.getContent());
+        editText.setText(BitMapManager.read(fileEntity.getAddress(),fileEntity.getMaxLength()));
 
         btCancel.setOnClickListener(new View.OnClickListener() {
             @Override

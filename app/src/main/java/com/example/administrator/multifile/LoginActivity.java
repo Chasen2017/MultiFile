@@ -18,6 +18,8 @@ import java.util.List;
 
 public class LoginActivity extends Activity implements View.OnClickListener{
 
+
+
     private EditText mEtUserName;
     private EditText mEtPassWord;
     private Button mBtLogin;
@@ -30,11 +32,13 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-
+        BitMapManager.initBitMap();//格式化位示图
         initView();
         initData();
 
+
     }
+
 
     private void initView() {
         mEtUserName= (EditText) findViewById(R.id.login_et_userName);
@@ -140,6 +144,10 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         }
         return null;
     }
+
+
+
+
 
 
 }
