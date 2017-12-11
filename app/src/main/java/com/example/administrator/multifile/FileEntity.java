@@ -18,33 +18,11 @@ public class FileEntity implements Parcelable {
     FileEntity parent;//父目录
     ArrayList<FileEntity> childList;//子目录
     int address;//表示文件的物理地址
-    int MaxLength=100;//文件的最大容量，默认为100,可以自己设置
-
-
-
-    boolean hasChildren;//是否有子目录，默认为false
-    boolean hasParent;//是否有父目录，默认为false
-
-    boolean canRead;//设置可读,默认为true
-    boolean canWrite;//设置可写,默认为false
-
-    String content;//当做数据文件里面的数据
-
+    int MaxLength;//文件的最大容量
 
     public FileEntity(String name, boolean isDirectory) {
         this.name = name;
         this.isDirectory = isDirectory;
-        if (isDirectory){
-            hasChildren=true;
-            childList = new ArrayList<>();
-        }else {
-            hasChildren = false;
-            content="";//默认内容为空
-        }
-
-        hasParent = false;
-        canRead = true;
-        canWrite = false;
     }
 
     public int getAddress() {
@@ -63,37 +41,12 @@ public class FileEntity implements Parcelable {
         MaxLength = maxLength;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public boolean isCanRead() {
-        return canRead;
-    }
-
-    public void setCanRead(boolean canRead) {
-        this.canRead = canRead;
-    }
-
-    public boolean isCanWrite() {
-        return canWrite;
-    }
-
-    public void setCanWrite(boolean canWrite) {
-        this.canWrite = canWrite;
-    }
 
     protected FileEntity(Parcel in) {
         name = in.readString();
         isDirectory = in.readByte() != 0;
         parent = in.readParcelable(FileEntity.class.getClassLoader());
         childList = in.createTypedArrayList(FileEntity.CREATOR);
-        hasChildren = in.readByte() != 0;
-        hasParent = in.readByte() != 0;
     }
 
     public static final Creator<FileEntity> CREATOR = new Creator<FileEntity>() {
@@ -140,21 +93,6 @@ public class FileEntity implements Parcelable {
         this.childList = childList;
     }
 
-    public boolean isHasChildren() {
-        return hasChildren;
-    }
-
-    public void setHasChildren(boolean hasChildren) {
-        this.hasChildren = hasChildren;
-    }
-
-    public boolean isHasParent() {
-        return hasParent;
-    }
-
-    public void setHasParent(boolean hasParent) {
-        this.hasParent = hasParent;
-    }
 
     @Override
     public int describeContents() {
@@ -167,8 +105,6 @@ public class FileEntity implements Parcelable {
         parcel.writeByte((byte) (isDirectory ? 1 : 0));
         parcel.writeParcelable(parent, i);
         parcel.writeTypedList(childList);
-        parcel.writeByte((byte) (hasChildren ? 1 : 0));
-        parcel.writeByte((byte) (hasParent ? 1 : 0));
     }
 
 

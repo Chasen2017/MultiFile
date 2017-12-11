@@ -118,10 +118,6 @@ public class BitMapManager {
             }
             Log.d("FileFragment", string);
         }
-
-//        Log.d("FileFragment",result.toString());
-
-        //去掉空值null
         return result.toString().replace("null","") ;
     }
 
